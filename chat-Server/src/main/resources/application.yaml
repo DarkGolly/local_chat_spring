@@ -1,0 +1,10 @@
+---
+spring:
+  application:
+    name: ChatServer
+  profiles:
+    active: prod
+server:
+  address: "localhost"
+
+  port: 8080

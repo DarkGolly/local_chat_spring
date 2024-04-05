@@ -1,0 +1,40 @@
+plugins {
+	id 'org.springframework.boot' version '3.2.0'
+	id 'io.spring.dependency-management' version '1.1.4'
+	id 'java'
+}
+
+
+group = 'danya.chat'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.apache.logging.log4j:log4j-api:2.23.0'
+	implementation 'org.apache.logging.log4j:log4j-core:2.23.0'
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	implementation('org.springframework.boot:spring-boot-starter-web')
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+}
+
+jar {
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+	manifest {
+		attributes(
+				'Main-Class': 'danya.chat.ChatApplication'
+		)
+	}
+	duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+defaultTasks "testMe"
+
+
+
+

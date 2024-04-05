@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="/styles/main.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<div class="container contact">
+    <div class="row">
+        <label class="control-label col-sm-2" for="ip">IP Address:</label>
+        <input type="text" class="form-control" id="ip" placeholder="Enter ip" name="ip" value="localhost">
+        <label for="connect">WebSocket connection:</label>
+        <button id="connect" class="btn btn-default" type="submit">Connect</button>
+        <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
+        </button>
+        <div class="col-md-3">
+            <div class="contact-info">
+                <img src="https://image.ibb.co/kUASdV/contact-image.png" alt="image"/>
+                <h2>E_Chat!</h2>
+                <h4>Super duper chat!</h4>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="contact-form">
+                <div class="form-group">
+                    <label class="control-label col-sm-2" for="name">Your name:</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="name" placeholder="Enter First Name" name="fname">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2" for="message">Your message:</label>
+                    <div class="col-sm-10">
+                        <textarea class="form-control" rows="5" id="message"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="submit" class="btn btn-default" id="send">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <table id="conversation" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Messages</th>
+                </tr>
+                </thead>
+
+                <tbody id="messages" class="scrollContent">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>
+<script>
+let stompClient;
+
+
+
+function setConnected(connected) {
+$("#connect").prop("disabled", connected);
+$("#disconnect").prop("disabled", !connected);
+if (connected) {
+$("#conversation").show();
+}
+else {
+$("#conversation").hide();
+}
+$("#messages").html("");
+}
+
+function connect() {
+    let ip = document.getElementById('ip').value;
+    stompClient = new StompJs.Client({
+        brokerURL: `ws://${ip}:8080/websocket`
+    });
+    stompClient.onConnect = (frame) => {
+        setConnected(true);
+
+        console.log('Connected: ' + frame);
+        stompClient.subscribe('/topic/messages', (message) => {
+            showGreeting(JSON.parse(message.body));
+        });
+    };
+    stompClient.onWebSocketError = (error) => {
+        console.error('Error with websocket', error);
+    };
+
+    stompClient.onStompError = (frame) => {
+        console.error('Broker reported error: ' + frame.headers['message']);
+        console.error('Additional details: ' + frame.body);
+    };
+stompClient.activate();
+}
+
+function disconnect() {
+
+stompClient.deactivate();
+setConnected(false);
+console.log("Disconnected");
+}
+
+
+function sendMessage() {
+stompClient.publish({
+destination: "/app/send",
+body: JSON.stringify({
+'from': $("#name").val(),
+'message': $("#message").val()
+})
+});
+}
+
+function showGreeting(body) {
+let message = body.message;
+let from = body.from;
+//let users = body.users;
+$("#messages").append("<tr><td>" + from + ": " + message + "</td></tr>");
+console.log(from + ": " + message);
+}
+
+$(function () {
+$("form").on('submit', (e) => e.preventDefault());
+$( "#connect" ).click(() => connect());
+$( "#disconnect" ).click(() => disconnect());
+$( "#send" ).click(() => sendMessage());
+});
+</script>
+</body>
+</html>
